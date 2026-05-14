@@ -21,12 +21,12 @@ const TempleMap = ({ mapData }) => {
 
   return (
     <div className="temple-map-section animate-fade-in">
-      <div className="section-header center">
-        <h2 className="serif">Explore Temples on Map</h2>
-        <p className="sans">Click on markers to discover the geographical spread of this style.</p>
+      <div className="section-header text-center mb-10">
+        <h2 className="serif text-4xl mb-3 text-[#FFD700]">Explore Temples on Map</h2>
+        <p className="sans text-[#FAF3E0]/80">Click on markers to discover the geographical spread of this style.</p>
       </div>
       
-      <div className="map-container-wrapper white-card">
+      <div className="map-container-wrapper glass-card p-4">
         <MapContainer 
           center={mapData.center} 
           zoom={mapData.zoom} 
@@ -34,8 +34,8 @@ const TempleMap = ({ mapData }) => {
           className="leaflet-container-rounded"
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
           {mapData.temples.map((temple, idx) => (
             <Marker key={idx} position={[temple.lat, temple.lng]}>

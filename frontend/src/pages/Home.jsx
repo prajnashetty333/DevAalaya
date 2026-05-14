@@ -1,11 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import ResultDisplay from '../components/ResultDisplay.jsx';
 import ArchitectureCard from '../components/ArchitectureCard.jsx';
+import ModelViewer from '../components/ModelViewer.jsx';
 import { architectureData } from '../data/architectureData';
+import { Link, useNavigate } from 'react-router-dom';
+import templeBg from '../assets/temple.jpg';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -62,41 +66,34 @@ const Home = () => {
   };
 
   return (
-    <div className="home-page">
-      {/* 1. Sticky Navbar */}
-      <nav className="navbar">
-        <div className="container nav-content">
-          <div className="logo">
-            <span className="logo-icon">🛕</span>
-            <h1>DevAlaya</h1>
-          </div>
-          <div className="nav-links">
-            <a href="#styles">Temple Styles</a>
-            <a href="#how-it-works">How It Works</a>
-            <button className="btn btn-primary" onClick={() => document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})}>
-              Try Now
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div 
+      className="home-page"
+      style={{
+        backgroundImage: `linear-gradient(to bottom, rgba(15, 10, 6, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%), url(${templeBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
 
       {/* 2. Hero Section */}
       <header className="hero">
         <div className="container">
           <div className="hero-content">
-            <span className="badge">AI-Powered Heritage Assistant</span>
             <h2 className="serif">Discover the Soul of<br/><span>Indian Architecture</span></h2>
             <p className="sans">
-              Upload temple images and discover whether they belong to Dravidian, 
-              Nagara, or Kalinga architecture using state-of-the-art AI analysis.
+              Identify temple architecture, uncover historical significance, and explore immersive virtual museums designed to preserve India’s timeless architectural legacy.
             </p>
-            <div className="hero-actions">
+            <div className="hero-actions flex gap-4 flex-wrap mt-6">
               <button className="btn btn-primary" onClick={() => document.getElementById('upload-section').scrollIntoView({behavior: 'smooth'})}>
                 Upload Temple Image
               </button>
               <button className="btn btn-outline" onClick={() => document.getElementById('styles').scrollIntoView({behavior: 'smooth'})}>
                 Learn Styles
               </button>
+              <Link to="/museum" className="btn btn-outline" style={{ background: 'rgba(255, 215, 0, 0.1)' }}>
+                Explore 3D Museum
+              </Link>
             </div>
           </div>
         </div>
@@ -110,20 +107,20 @@ const Home = () => {
             <p className="sans">Analyze architectural heritage in three simple steps.</p>
           </div>
           <div className="steps-grid">
-            <div className="step-card white-card">
+            <div className="step-card glass-card">
               <div className="step-num">01</div>
-              <h3>Upload Image</h3>
-              <p>Upload a clear photo of a temple's Shikhara, Vimana, or Mandapa.</p>
+              <h3 className="serif text-2xl mb-3 text-[#FFD700]">Upload Image</h3>
+              <p className="sans text-[#FAF3E0]/80">Upload a clear photo of a temple's Shikhara, Vimana, or Mandapa.</p>
             </div>
-            <div className="step-card white-card">
+            <div className="step-card glass-card">
               <div className="step-num">02</div>
-              <h3>AI Analysis</h3>
-              <p>Our CNN engine extracts features and identifies the architectural lineage.</p>
+              <h3 className="serif text-2xl mb-3 text-[#FFD700]">AI Analysis</h3>
+              <p className="sans text-[#FAF3E0]/80">Our CNN engine extracts features and identifies the architectural lineage.</p>
             </div>
-            <div className="step-card white-card">
+            <div className="step-card glass-card">
               <div className="step-num">03</div>
-              <h3>View Results</h3>
-              <p>Get detailed insights into features, materials, and historical examples.</p>
+              <h3 className="serif text-2xl mb-3 text-[#FFD700]">View Results</h3>
+              <p className="sans text-[#FAF3E0]/80">Get detailed insights into features, materials, and historical examples.</p>
             </div>
           </div>
         </div>
@@ -144,6 +141,7 @@ const Home = () => {
         </div>
       </section>
 
+
       {/* 5. Upload Section */}
       <section id="upload-section" className="section bg-light">
         <div className="container">
@@ -154,22 +152,22 @@ const Home = () => {
           
           <div className="upload-wrapper">
             {!previewUrl ? (
-              <div className="upload-box white-card drop-zone" onClick={() => fileInputRef.current.click()}>
+              <div className="upload-box drop-zone" onClick={() => fileInputRef.current.click()}>
                 <div className="icon-circle">↑</div>
-                <h3>Select Image</h3>
-                <p>Drag & drop or click to browse</p>
+                <h3 className="serif text-3xl mb-2 text-[#FAF3E0]">Select Image</h3>
+                <p className="sans text-[#FAF3E0]/70">Drag & drop or click to browse</p>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" hidden />
               </div>
             ) : (
-              <div className="preview-card white-card">
+              <div className="preview-card">
                 <img src={previewUrl} alt="Preview" className="mini-preview" />
-                <div className="preview-btns">
+                <div className="preview-btns flex justify-center gap-4">
                   <button className="btn btn-primary" onClick={handleUpload} disabled={loading}>
                     {loading ? 'Analyzing...' : 'Analyze Architecture'}
                   </button>
-                  <button className="btn btn-outline" onClick={reset}>Change</button>
+                  <button className="btn btn-outline" onClick={reset}>Change Image</button>
                 </div>
-                {error && <p className="error-text">{error}</p>}
+                {error && <p className="error-text mt-4 text-red-400 font-bold">{error}</p>}
               </div>
             )}
           </div>
@@ -184,20 +182,24 @@ const Home = () => {
           </div>
         </section>
       )}
-
-      {/* 7. Footer */}
-      <footer className="footer">
-        <div className="container footer-content">
-          <div className="footer-brand">
-            <h2 className="serif">DevAlaya</h2>
-            <p className="sans">Preserving Indian Heritage Through AI</p>
-          </div>
-          <div className="footer-links">
-            <a href="#">GitHub</a>
-            <a href="#">Contact</a>
+      {/* NEW: 3D Museum Link Section */}
+      <section className="section overflow-hidden relative group cursor-pointer" onClick={() => navigate('/museum')}>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/5 to-[#D4A373]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+        <div className="container relative z-10 py-16">
+          <div className="text-center glass-card border border-[#FFD700]/30 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center" style={{ padding: 'clamp(3rem, 6vw, 6rem)' }}>
+            <div className="absolute -inset-1 bg-gradient-to-tr from-[#FFD700] via-[#C5A059] to-[#FFD700] opacity-20 blur-2xl group-hover:opacity-40 transition-opacity pointer-events-none"></div>
+            <div className="relative z-10 w-full flex flex-col items-center">
+              <h2 className="serif text-white text-4xl md:text-5xl">Enter the <span className="text-[#FFD700]">3D Museum</span></h2>
+              <p className="sans text-[#FAF3E0]/80 max-w-xl text-center my-8 text-lg md:text-xl font-light leading-relaxed px-4">
+                Step into our virtual gallery and experience the grandeur of Indian temple architecture.
+              </p>
+              <Link to="/museum" className="btn btn-primary inline-flex text-base md:text-lg px-8 md:px-10 py-3 md:py-4 font-bold shadow-[0_0_30px_rgba(255,215,0,0.3)] hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] hover:-translate-y-2 transition-all duration-300">
+                Explore 3D Museum
+              </Link>
+            </div>
           </div>
         </div>
-      </footer>
+      </section>
     </div>
   );
 };

@@ -12,6 +12,10 @@ const ArchitectureDetail = () => {
   const [data, setData] = useState(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const styleData = architectureData[styleId.toLowerCase()];
     if (styleData) {
       setData(styleData);
@@ -24,18 +28,7 @@ const ArchitectureDetail = () => {
   if (!data) return null;
 
   return (
-    <div className="detail-page app-container">
-      {/* Mini Nav for Detail Page */}
-      <nav className="navbar sticky-nav">
-        <div className="container nav-content">
-          <button className="back-btn" onClick={() => navigate('/')}>
-            ← Back to Heritage
-          </button>
-          <div className="logo mini-logo">
-            <h1>DevAlaya</h1>
-          </div>
-        </div>
-      </nav>
+    <div className="detail-page app-container selection:bg-[#FFD700]/30">
 
       {/* Hero Banner */}
       <header 
@@ -43,8 +36,8 @@ const ArchitectureDetail = () => {
         style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${data.heroImage})` }}
       >
         <div className="container">
-          <span className="badge">{data.region} Style</span>
-          <h2 className="serif">{data.title}</h2>
+          <span className="badge">Heritage Architecture</span>
+          <h2 className="serif text-white drop-shadow-2xl">{data.title}</h2>
           <p className="detail-intro">{data.description}</p>
         </div>
       </header>
@@ -83,18 +76,18 @@ const ArchitectureDetail = () => {
           <div className="tab-content">
             {activeTab === 'features' && (
               <div className="features-view animate-fade-in">
-                <div className="white-card">
-                  <h3 className="section-title serif">Defining Characteristics</h3>
+                <div className="glass-card">
+                  <h3 className="section-title serif text-[#FFD700] mb-6 text-3xl">Defining Characteristics</h3>
                   <div className="features-list-grid">
                     {data.features.map(f => (
-                      <div key={f} className="feature-pill">{f}</div>
+                      <div key={f} className="feature-pill border border-[#FFD700]/30 bg-black/40 text-[#FAF3E0] shadow-md hover:bg-[#FFD700]/10 transition-colors">{f}</div>
                     ))}
                   </div>
                   
-                  <div className="examples-box">
-                    <h4 className="sub-title">Famous Temple Examples</h4>
-                    <ul className="examples-list">
-                      {data.examples.map(e => <li key={e}>{e}</li>)}
+                  <div className="examples-box mt-10 p-6 bg-black/40 border border-[#FFD700]/20 rounded-2xl">
+                    <h4 className="sub-title serif text-[#FFD700] mb-4 text-xl">Famous Temple Examples</h4>
+                    <ul className="examples-list space-y-2 text-[#FAF3E0]/80">
+                      {data.examples.map(e => <li key={e} className="flex items-center gap-2"><span className="text-[#FFD700]">✦</span> {e}</li>)}
                     </ul>
                   </div>
                 </div>
