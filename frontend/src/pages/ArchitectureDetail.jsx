@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { architectureData } from '../data/architectureData';
 import HistorySection from '../components/HistorySection';
@@ -9,21 +9,15 @@ const ArchitectureDetail = () => {
   const { styleId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('features'); // 'features', 'history', 'visual', 'map'
-  const [data, setData] = useState(null);
+  const data = architectureData[styleId?.toLowerCase()];
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    const styleData = architectureData[styleId.toLowerCase()];
-    if (styleData) {
-      setData(styleData);
-      window.scrollTo(0, 0);
-    } else {
+    if (!data) {
       navigate('/');
+    } else {
+      window.scrollTo(0, 0);
     }
-  }, [styleId, navigate]);
+  }, [data, navigate]);
 
   if (!data) return null;
 

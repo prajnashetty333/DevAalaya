@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Home, ArrowLeft, Info, Box, Compass } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Box, Compass } from 'lucide-react';
 import ModelViewer from '../components/ModelViewer.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
 
 const Museum = () => {
-  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -91,7 +89,7 @@ const Museum = () => {
 
       {/* Museum Content */}
       <main className="container py-20">
-        {sections.map((section, idx) => (
+        {sections.map((section) => (
           <section key={section.id} className="mb-32">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">
               

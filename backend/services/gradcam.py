@@ -23,9 +23,6 @@ from config import (
     CONFIDENCE_THRESHOLD,
     HEATMAPS_DIR,
     EFFICIENTNET_MODEL_PATH,
-    SVM_MODEL_PATH,
-    SCALER_PATH,
-    LABEL_ENCODER_PATH,
     CLASS_NAMES_PATH
 )
 
@@ -35,9 +32,6 @@ from config import (
 _full_model = None
 _feature_extractor = None
 _gradcam_model = None
-_svm_model = None
-_scaler = None
-_label_encoder = None
 _class_names = None
 
 
@@ -47,27 +41,19 @@ _class_names = None
 # ---------------------------------------------------
 def load_all_models(
     model_path,
-    svm_path,
-    scaler_path,
-    label_encoder_path,
     class_names_path
 ):
     global _full_model
     global _feature_extractor
     global _gradcam_model
-    global _svm_model
-    global _scaler
-    global _label_encoder
     global _class_names
 
     print("[DevAlaya] Loading models...")
 
-    # CNN model
-    _full_model = load_model(
-        model_path,
-        compile=False,
-        safe_mode=False
-    )
+    # Reuse predictor model to save memory & load time
+    import services.predictor as predictor
+    predictor.load_all_models()
+    _full_model = predictor.model
 
     # Feature extractor → second last layer
     _feature_extractor = Model(
@@ -83,10 +69,6 @@ def load_all_models(
         outputs=[last_conv_layer.output, _full_model.output]
     )
 
-    # SVM pipeline
-    _svm_model = joblib.load(svm_path)
-    _scaler = joblib.load(scaler_path)
-    _label_encoder = joblib.load(label_encoder_path)
 
     with open(class_names_path, "r") as f:
         _class_names = json.load(f)
@@ -172,18 +154,7 @@ def overlay_gradcam(display_img, heatmap):
 def generate_lime(display_img):
     def predict_fn(images):
         batch = preprocess_input(images.astype(np.float32))
-
-        features = _feature_extractor.predict(
-            batch,
-            verbose=0
-        )
-
-        scaled_features = _scaler.transform(features)
-
-        probs = _svm_model.predict_proba(
-            scaled_features
-        )
-
+        probs = _full_model.predict(batch, verbose=0)
         return probs
 
     explainer = lime_image.LimeImageExplainer()
@@ -280,9 +251,6 @@ def explain_prediction(
     if _feature_extractor is None:
         load_all_models(
             EFFICIENTNET_MODEL_PATH,
-            SVM_MODEL_PATH,
-            SCALER_PATH,
-            LABEL_ENCODER_PATH,
             CLASS_NAMES_PATH
         )
 
@@ -290,27 +258,11 @@ def explain_prediction(
         image_path
     )
 
-    # Feature extraction
-    features = _feature_extractor.predict(
-        processed_img,
-        verbose=0
-    )
-
-    scaled_features = _scaler.transform(
-        features
-    )
-
-    probs = _svm_model.predict_proba(
-        scaled_features
-    )[0]
-
-    class_index = np.argmax(probs)
+    preds = _full_model.predict(processed_img, verbose=0)
+    class_index = np.argmax(preds[0])
+    confidence = float(np.max(preds[0]))
 
     predicted_class = _class_names[class_index]
-    confidence = float(
-        probs[class_index]
-    )
-
     uncertain = confidence < CONFIDENCE_THRESHOLD
 
     # GradCAM

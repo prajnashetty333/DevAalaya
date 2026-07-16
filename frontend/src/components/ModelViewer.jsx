@@ -1,6 +1,6 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, useGLTF, Html, useProgress, Center, Stage } from '@react-three/drei';
+import { OrbitControls, useGLTF, Html, useProgress, Stage } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import logoImg from '../assets/logo.png';
 

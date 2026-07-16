@@ -1,8 +1,3 @@
-# ==========================================
-# THE ULTIMATE .GITIGNORE FOR DEV-ALAYA
-# Covers: Python, Node.js, ML, IDEs, OS, & Tools
-# ==========================================
-
 # --- Python ---
 __pycache__/
 *.py[cod]
@@ -179,3 +174,7 @@ temp/
 .dockerignore
 # Docker images are usually not committed, but some people use docker-compose.override.yml
 docker-compose.override.yml
+backend/static/heatmaps/
+backend/static/heatmaps/
+temp_uploads/
+predictions/

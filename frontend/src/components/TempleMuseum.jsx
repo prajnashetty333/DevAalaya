@@ -1,6 +1,6 @@
-import React, { useState, Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Stage, OrbitControls, PerspectiveCamera, Center, Float, Text, useTexture, Image } from '@react-three/drei';
+import { useState, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Center, Float, Text, Image } from '@react-three/drei';
 import * as THREE from 'three';
 
 /**

@@ -1,8 +1,24 @@
 import os
 import uuid
+import logging
 
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
+from app import limiter
+
+# Configure logging to logs/app.log
+LOGS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+log_filepath = os.path.join(LOGS_DIR, "app.log")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+if not logger.handlers:
+    file_handler = logging.FileHandler(log_filepath)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
 
 from config import (
     TEMP_UPLOAD_DIR,
@@ -38,6 +54,7 @@ def allowed_file(filename):
 # POST /predict
 # ----------------------------------------
 @predict_bp.route("/predict", methods=["POST"])
+@limiter.limit("10 per minute")
 def predict():
     try:
         # Check file exists
@@ -79,47 +96,52 @@ def predict():
             exist_ok=True
         )
 
-        file.save(filepath)
+        # Validate request Content-Length before saving to disk
+        content_length = request.content_length
+        if content_length is None:
+            return jsonify({
+                "success": False,
+                "message": "Missing Content-Length header"
+            }), 400
 
-        # File size validation
-        file_size_mb = os.path.getsize(
-            filepath
-        ) / (1024 * 1024)
-
-        if file_size_mb > MAX_FILE_SIZE_MB:
-            os.remove(filepath)
-
+        if content_length > MAX_FILE_SIZE_MB * 1024 * 1024:
             return jsonify({
                 "success": False,
                 "message": f"File exceeds {MAX_FILE_SIZE_MB}MB limit"
             }), 400
 
-        # -----------------------------
-        # Prediction
-        # -----------------------------
-        prediction_result = predict_temple(filepath)
+        file.save(filepath)
 
-        if "error" in prediction_result:
+        try:
+            # -----------------------------
+            # Prediction
+            # -----------------------------
+            prediction_result = predict_temple(filepath)
+
+            if "error" in prediction_result:
+                return jsonify({
+                    "success": False,
+                    "message": f"Prediction Engine Error: {prediction_result['error']}"
+                }), 500
+
+
             return jsonify({
-                "success": False,
-                "message": f"Prediction Engine Error: {prediction_result['error']}"
-            }), 500
+                "success": True,
+                "prediction": prediction_result.get("final_prediction", "Error"),
+                "confidence": prediction_result.get("confidence", 0),
+                "cnn_result": prediction_result.get("cnn_result", {}),
+                "svm_result": prediction_result.get("svm_result", {}),
+                "uncertain": prediction_result.get("confidence", 0) < 0.55,
+                "class_probabilities": prediction_result.get("class_probabilities")
+            })
+        finally:
+            if os.path.exists(filepath):
+                os.remove(filepath)
 
-        # Remove temp file after processing
-        if os.path.exists(filepath):
-            os.remove(filepath)
-
-        return jsonify({
-            "success": True,
-            "prediction": prediction_result.get("final_prediction", "Error"),
-            "confidence": prediction_result.get("confidence", 0),
-            "cnn_result": prediction_result.get("cnn_result", {}),
-            "svm_result": prediction_result.get("svm_result", {}),
-            "uncertain": prediction_result.get("confidence", 0) < 0.55
-        })
 
     except Exception as e:
+        logger.exception("An exception occurred in predict route:")
         return jsonify({
             "success": False,
-            "message": str(e)
+            "message": "An internal error occurred. Please try again."
         }), 500

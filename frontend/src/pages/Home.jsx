@@ -1,12 +1,11 @@
-import React, { useState, useRef, Suspense } from 'react';
+import { useState, useRef } from 'react';
 import ResultDisplay from '../components/ResultDisplay.jsx';
 import ArchitectureCard from '../components/ArchitectureCard.jsx';
-import ModelViewer from '../components/ModelViewer.jsx';
 import { architectureData } from '../data/architectureData';
 import { Link, useNavigate } from 'react-router-dom';
 import templeBg from '../assets/temple.jpg';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -15,6 +14,8 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [explainResult, setExplainResult] = useState(null);
+  const [explainLoading, setExplainLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -24,6 +25,31 @@ const Home = () => {
       setPreviewUrl(URL.createObjectURL(file));
       setResult(null);
       setError(null);
+      setExplainResult(null);
+      setExplainLoading(false);
+    }
+  };
+
+  const fetchExplanation = async (imageFile) => {
+    setExplainLoading(true);
+    setExplainResult(null);
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    try {
+      const response = await fetch(`${API_BASE_URL}/explain/`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        setExplainResult(data);
+      } else {
+        console.error('Explanation failed:', data.message);
+      }
+    } catch (err) {
+      console.error('Explanation request error:', err);
+    } finally {
+      setExplainLoading(false);
     }
   };
 
@@ -48,10 +74,14 @@ const Home = () => {
         setTimeout(() => {
           document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
         }, 100);
+        
+        // Trigger explanation independently
+        fetchExplanation(selectedImage);
       } else {
         setError(data.message || 'Prediction failed');
       }
     } catch (err) {
+      console.error('Upload prediction error:', err);
       setError('Could not connect to the server. Make sure the backend is running.');
     } finally {
       setLoading(false);
@@ -63,6 +93,8 @@ const Home = () => {
     setPreviewUrl(null);
     setResult(null);
     setError(null);
+    setExplainResult(null);
+    setExplainLoading(false);
   };
 
   return (
@@ -178,7 +210,13 @@ const Home = () => {
       {result && (
         <section id="results-section" className="section result-section">
           <div className="container">
-            <ResultDisplay result={result} originalImage={previewUrl} onReset={reset} />
+            <ResultDisplay 
+              result={result} 
+              originalImage={previewUrl} 
+              explainResult={explainResult} 
+              explainLoading={explainLoading} 
+              onReset={reset} 
+            />
           </div>
         </section>
       )}
