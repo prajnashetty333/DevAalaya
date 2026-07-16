@@ -1,243 +1,227 @@
 # 🏛️ DevAlaya: Digital Preservation & AI Analysis of Indian Temple Architecture
+> Classify and explore Indian Temple Architecture using Deep Learning and Explainable AI.
 
-[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
-[![Three.js](https://img.shields.io/badge/Three.js-WebGL-black?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
 [![Keras](https://img.shields.io/badge/Keras-3.12-D00000?style=for-the-badge&logo=keras&logoColor=white)](https://keras.io/)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-**DevAlaya** (*Abode of the Divine*) is a professional-grade digital heritage platform designed to preserve, classify, and visualize the architectural legacy of ancient Indian temples. The application integrates deep convolutional neural networks (EfficientNet-B0), Explainable AI (Grad-CAM and LIME), and interactive 3D WebGL graphics (React Three Fiber & Three.js) to bridge historical preservation with cutting-edge machine learning and web experiences.
-
----
-
-## 🚀 Key Engineering & Architecture Upgrades
-
-Recently, the system architecture was refactored and optimized to transition from a prototype to a production-ready, high-performance portfolio application. 
-
-### 1. 🧠 Direct Softmax Neural Classifier
-* **Pipeline Simplification:** Migrated from a dual-stage pipeline (CNN Feature Extractor + SVM Classifier Head) to a direct, end-to-end Keras model (`devalaya_final_model.keras`). Predictions are generated using native softmax probability distributions directly from the fine-tuned CNN.
-* **Granular Class Probabilities:** The frontend now displays a responsive bar-chart breakdown highlighting the exact network confidence for all regional styles: **Nagara** (North Indian), **Dravidian** (South Indian), and **Kalinga** (East Indian/Odishan).
-* **Robust Out-of-Distribution (OOD) Flagging:** Implemented confidence filtering based on a threshold (`CONFIDENCE_THRESHOLD = 0.85`). Images failing to meet this classification threshold are elegantly flagged as "Ambiguous/Non-Temple Signature" to prevent false inferences.
-
-### 2. 🔍 Decoupled & Async Explainable AI (XAI) Suite
-* **Dual Explainers:** Configured **Grad-CAM** (gradient-weighted class activation heatmaps focused on the `top_activation` layer) and **LIME** (Local Interpretable Model-agnostic Explanations highlighting superpixel segment textures).
-* **Asynchronous Execution:** Built a dedicated, non-blocking `/explain/` API endpoint. The frontend triggers the main classification `/predict` and the heavy XAI computations `/explain/` independently. This decoupled design ensures the user is presented with the classification result instantly, while XAI assets render in the background with a visual loading state.
-* **Shared Engine Memory:** Explainer and predictor engines share the same pre-loaded model reference in-memory to prevent duplicate weights loading and minimize RAM usage.
-
-### 3. 📐 Geometry-Preserving Image Preprocessing
-* **The Problem:** Direct scaling of inputs to `224x224` distorted critical geometric proportions (e.g., squashing tall *Shikharas* or *Vimanas*), degrading model accuracy and activation mapping.
-* **The Solution:** Upgraded the preprocessing pipeline using Pillow (`PIL.Image.LANCZOS` resampling). Images are scaled proportionally to fit within `224x224` and centered onto a black padding canvas. This preserves key architectural aspects, structural ratios, and angles.
-
-### 4. ⚡ Production Server Optimization & Startup Latency Fix
-* **Eager Initialization:** Integrated eager model initialization under `app_context()` during Flask app startup. This resolves the 10+ second "cold start" latency previously experienced by the first request.
-* **API Rate Limiting:** Secured endpoints using `Flask-Limiter` (IP-based limits of `200 per day` and `50 per hour` globally, with strict `10 per minute` on predictions and `5 per minute` on explanations).
-* **GIL-Safe Multiprocessing Gateway:** Configured `Gunicorn` with an optimized worker setup, disabling preload arguments to avoid multiprocessing deadlock conflicts during TensorFlow/OpenCV library forks.
-
-### 5. 🐳 Containerized Orchestration
-* **Dockerized Environment:** Created a multi-stage `Dockerfile` based on `python:3.10-slim`, bundling necessary native OpenCV dynamic libraries (`libglib2.0-0`, `libgl1`, `libsm6`, `libxrender-dev`, etc.).
-* **Docker Compose Setup:** Orchestrated the service stack with a `docker-compose.yml` mapping the container's Gunicorn instance to port `5001` on the host, making deployment predictable and scriptable.
+> 🌐 **Live Demo:** Coming Soon — deploying to Vercel + Render  
+> 🎓 **Author:** Prajna Shetty — RNS Institute of Technology, Bengaluru (B.E. CSE, 2028)  
+> 📦 **Backend:** Dockerized Flask + Gunicorn  
 
 ---
 
-## 📐 System Flow & Data Pipeline
+## What is DevAalaya?
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as User Browser
-    participant FE as React Frontend (Vite)
-    participant API as Flask API Gateway (Gunicorn)
-    participant CNN as Keras Model Engine
-
-    User->>FE: Upload Temple Image
-    FE->>FE: Render Preview Image & Clear Prev State
-    
-    par Async Classify Request
-        FE->>API: POST /predict (Image multipart)
-        API->>API: Rate-Limit Check (10/min)
-        API->>CNN: Geometry-Preserving Preprocess (PIL Lanczos Pad)
-        API->>CNN: Classify Image (Direct Softmax Inference)
-        CNN-->>API: Style Probabilities & Top Prediction
-        API-->>FE: Return JSON (class_probabilities, confidence, uncertain)
-        FE->>User: Render Interactive Metrics (Confidence Bar Charts)
-    and Async XAI Request
-        FE->>API: POST /explain (Image multipart)
-        API->>API: Rate-Limit Check (5/min)
-        API->>CNN: Generate Grad-CAM (Heatmap Layer) & LIME (Superpixels)
-        CNN-->>API: Base64-Encoded PNG Artifacts
-        API-->>FE: Return JSON (gradcam_base64, lime_base64)
-        FE->>User: Render Visual Heatmaps (Side-by-Side Dashboard Cards)
-    end
-```
+DevAalaya (*Abode of the Divine*) is a full-stack heritage platform that classifies Indian temple architecture styles from uploaded images using a fine-tuned EfficientNetB0 CNN. It explains its predictions visually using GradCAM and LIME heatmaps, and lets users explore temples through an interactive 3D virtual museum and a GIS heritage map.
 
 ---
 
-## 🛠️ Technology Stack
+## Features
 
-| Layer | Technologies | Role / Description |
+- 🔍 Upload a temple image → get **Nagara**, **Dravidian**, or **Kalinga** classification with confidence score
+- 📊 All 3 class probabilities displayed as an interactive bar chart
+- 🧠 **GradCAM heatmap** showing which image regions the model focused on
+- 🔬 **LIME explanation** highlighting architectural segments that influenced the decision
+- 🏛️ **Interactive 3D Virtual Museum** — explore 5 temple models (Konark Sun Temple, Ram Mandir, Nagara Shikhara, Uthirakosamangai Temple, South Indian Modular Kit) with WebGL rendering, auto-rotation, and orbit controls
+- 🗺️ **GIS Heritage Map** with 20+ historical temple sites across India on a dark Leaflet map with historical summaries
+- 📖 Architectural style breakdown — features, historical examples, materials, and dynastic origins
+- ⚠️ Out-of-distribution detection — rejects non-temple images using a 0.85 confidence threshold
+
+---
+
+## Tech Stack
+
+| Layer | Technologies | Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | React 18, Vite, React Three Fiber (R3F), Drei, Three.js, Framer Motion, Lucide Icons | Responsive 3D virtual museum, immersive rendering of GLB models, real-time animation, interactive analytics dashboard. |
-| **Backend** | Flask 3.0, Flask-Cors, Flask-Limiter, Gunicorn | High-performance Python REST API, rate limiting, logging, model eager-loading. |
-| **Deep Learning** | TensorFlow 2.20, Keras 3.12, PIL (Pillow), OpenCV | EfficientNet-B0 image classification, aspect-preserving canvas padding. |
-| **Explainable AI** | LIME, Grad-CAM (TensorFlow Gradients), Matplotlib | Saliency maps, superpixel feature boundaries, and class activation heatmaps. |
-| **DevOps** | Docker, Docker-Compose | Containerized deployment, system library configuration, ports mappings. |
+| **Frontend** | React 19, Vite, Tailwind CSS v4, Three.js, React Three Fiber, Leaflet, Framer Motion | UI, 3D museum, GIS map, animations |
+| **Backend** | Flask 3.0, Gunicorn, Docker, Flask-Limiter, Flask-CORS | REST API, rate limiting, containerized deployment |
+| **ML / AI** | EfficientNetB0, TensorFlow 2.20, Keras 3.12, GradCAM, LIME | Image classification, explainability heatmaps |
+| **Tools** | OpenCV, Pillow, scikit-learn, Matplotlib | Image preprocessing, visualization |
 
 ---
 
-## 📂 Repository Structure
+## How It Works
 
-```directory
-DevAlaya/
+1. User uploads a temple image
+2. Frontend simultaneously calls `POST /predict` and `POST /explain`
+3. `/predict` runs EfficientNetB0 inference and returns the style, confidence, and all 3 class probabilities instantly
+4. Result card renders immediately with the confidence bar chart
+5. `/explain` runs GradCAM and LIME in the background (20–40 seconds) and returns base64 heatmaps
+6. GradCAM and LIME cards render below the result once ready
+
+---
+
+## Model Details
+
+- **Architecture:** EfficientNetB0 with custom head (GAP → BatchNorm → Dropout → Dense 256 → Softmax)
+- **Training:** Two-phase transfer learning
+  - Phase 1: Base frozen, `lr=1e-3` (head only)
+  - Phase 2: Top 30 layers unfrozen, `lr=1e-5` (fine-tuning)
+- **Dataset:** ~165 images/class with per-class augmentation intensity
+- **Classes:** Nagara, Dravidian, Kalinga
+- **OOD threshold:** 0.85 confidence — below this returns Unknown/Non-Temple
+- **XAI:** GradCAM on `top_activation` layer + LIME with 300 superpixel samples
+
+---
+
+## Project Structure
+
+```
+DevAalaya/
 ├── backend/
-│   ├── app.py                     # Flask entrypoint & eager loader
-│   ├── config.py                  # Thresholds, dirs, and hyper-parameters
-│   ├── Dockerfile                 # Production environment container setup
-│   ├── docker-compose.yml         # Container mapping & port configuration (Host 5001)
-│   ├── requirements.txt           # Python dependency manifests
+│   ├── app.py                  # Flask entry + eager model loader
+│   ├── config.py               # Paths, thresholds, directories
+│   ├── Dockerfile              # Production container
+│   ├── requirements.txt        # Python dependencies
 │   ├── models/
-│   │   ├── devalaya_final_model.keras  # Native Keras model weights
-│   │   └── class_names.json       # Array of architecture styles [nagara, dravidian, kalinga]
+│   │   ├── devalaya_final_model.keras
+│   │   └── class_names.json
 │   ├── routes/
-│   │   ├── predict_routes.py      # Standard prediction endpoint (/predict)
-│   │   └── explain_routes.py      # Async explainability endpoint (/explain/)
+│   │   ├── predict_routes.py   # POST /predict
+│   │   └── explain_routes.py   # POST /explain
 │   └── services/
-│       ├── predictor.py           # Aspect-ratio padding and CNN inference
-│       └── gradcam.py             # Grad-CAM and LIME generation algorithms
+│       ├── predictor.py        # Preprocessing + CNN inference
+│       └── gradcam.py          # GradCAM + LIME generation
 ├── frontend/
+│   ├── public/
+│   │   └── models/             # Draco-compressed GLB files
 │   ├── src/
-│   │   ├── components/            # UI components (ResultDisplay, ModelViewer, etc.)
-│   │   ├── pages/                 # Routing pages (Home, Museum, etc.)
-│   │   ├── App.jsx                # Layout orchestrator
-│   │   └── index.css              # Global custom design variables (Basalt & Gold theme)
-│   ├── package.json               # Node dependencies & Vite build configurations
-│   └── vite.config.js             # Vite compiler definitions
-└── README.md                      # Platform documentation
+│   │   ├── components/         # ResultDisplay, ModelViewer, etc.
+│   │   ├── pages/              # Home, Museum, Detail pages
+│   │   └── App.jsx             # Routing and layout
+│   └── package.json
+└── README.md
 ```
 
 ---
 
-## 🚀 Getting Started & Setup
+## Getting Started
 
-### Option A: Running Containerized (Recommended for Production)
-
-Ensure you have **Docker** and **Docker Compose** installed.
-
-1. **Build and start the backend service:**
-   ```bash
-   cd backend
-   docker-compose up --build -d
-   ```
-   *The backend will compile and serve API endpoints on `http://localhost:5001`.*
-
-2. **Run the frontend locally:**
-   ```bash
-   cd ../frontend
-   npm install
-   npm run dev
-   ```
-   *The application will boot on `http://localhost:5173`. Make sure your `.env` or Vite configurations point to host port `5001`.*
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- Docker Desktop (for Option B)
 
 ---
 
-### Option B: Running Bare-Metal (Local Development)
+### Option A — Local Development
 
-#### Prerequisites
-* **Node.js** (v18.x or newer)
-* **Python** (v3.10.x recommended)
+**Backend:**
+```bash
+cd backend
+python -m venv venv
 
-#### 1. Backend Setup
-1. Move to the `backend` directory and instantiate a virtual environment:
-   ```bash
-   cd backend
-   python -m venv venv
-   ```
-2. Activate the virtual environment:
-   * **Windows (PowerShell):**
-     ```powershell
-     .\venv\Scripts\Activate.ps1
-     ```
-   * **macOS/Linux:**
-     ```bash
-     source venv/bin/activate
-     ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Start the development server:
-   ```bash
-   python app.py
-   ```
-   *The local server boots up at `http://localhost:5000` (Note: Frontend defaults to `5001` for container testing, but fallback points to `5000` or can be overridden via `VITE_API_URL`).*
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
 
-#### 2. Frontend Setup
-1. Move to the `frontend` directory:
-   ```bash
-   cd ../frontend
-   ```
-2. Install npm packages:
-   ```bash
-   npm install
-   ```
-3. Boot the Vite development workspace:
-   ```bash
-   npm run dev
-   ```
+pip install -r requirements.txt
+python app.py
+# Runs on http://localhost:5000
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+# Runs on http://localhost:5173
+```
 
 ---
 
-## 🎨 Cultural Design Aesthetics
+### Option B — Docker
 
-DevAlaya matches its technological architecture with a premium visual design language honoring the heritage it represents:
-* **Rich Color Palette:** A deep basalt background (`#0F0A06`), warm historic parchment typography (`#FAF3E0`), and radiant, sacred gold accents (`#FFD700`).
-* **Glassmorphic Components:** Frosted panels with delicate gold borders, visual shadows, and translucent layouts.
-* **Micro-Animations:** Fluid state transitions, hover effects on navigation elements, and smooth panning across 3D WebGL scenes to elevate user interaction.
+```bash
+cd backend
+docker build -t devalaya-backend .
+docker run -p 5000:5000 devalaya-backend
+# Backend runs on http://localhost:5000
+```
+
+Then run the frontend locally as shown in Option A.
 
 ---
 
-## 🤝 Open API Reference
+## API Reference
 
-### 1. Classification Endpoint
-* **URL:** `/predict`
-* **Method:** `POST`
-* **Headers:** `Content-Type: multipart/form-data`
-* **Payload:** `image` (File binary)
-* **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "prediction": "dravidian",
-    "confidence": 0.982,
-    "uncertain": false,
-    "class_probabilities": {
-      "dravidian": 98.2,
-      "nagara": 1.1,
-      "kalinga": 0.7
-    }
+### `POST /predict`
+```
+Content-Type: multipart/form-data
+Body: image (file)
+```
+```json
+{
+  "success": true,
+  "prediction": "dravidian",
+  "confidence": 0.982,
+  "uncertain": false,
+  "class_probabilities": {
+    "dravidian": 98.2,
+    "nagara": 1.1,
+    "kalinga": 0.7
   }
-  ```
+}
+```
 
-### 2. Explanation Endpoint
-* **URL:** `/explain/`
-* **Method:** `POST`
-* **Headers:** `Content-Type: multipart/form-data`
-* **Payload:** `image` (File binary)
-* **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "prediction": "dravidian",
-    "confidence": 0.982,
-    "uncertain": false,
-    "gradcam_base64": "iVBORw0KGgoAAAANSUhEUg...",
-    "lime_base64": "iVBORw0KGgoAAAANSUhEUg..."
-  }
-  ```
+### `POST /explain`
+```
+Content-Type: multipart/form-data
+Body: image (file)
+```
+```json
+{
+  "success": true,
+  "prediction": "dravidian",
+  "confidence": 0.982,
+  "uncertain": false,
+  "gradcam_base64": "iVBORw0KGgo...",
+  "lime_base64": "iVBORw0KGgo..."
+}
+```
+> ⏱️ Note: `/explain` takes 20–40 seconds due to LIME computation.
+
+### `GET /health`
+```json
+{ "status": "ok", "message": "DevAlaya backend running" }
+```
 
 ---
 
-## ⚖️ License & Attribution
+## Known Limitations
 
-This project is licensed under the [MIT License](LICENSE). 
-*All 3D models of temple components, layout assets, and visual elements are curated for digital archaeological preservation and analysis.*
+- **Small dataset (~165 images/class):** May produce false positives on non-temple images with circular ornate structures (e.g. emblems, badges) that visually resemble the Amalaka stone disc motif in Kalinga architecture. The 0.85 OOD threshold reduces but does not eliminate all edge cases.
+
+- **GradCAM background attention:** With limited training data, the model occasionally attends to background textures (sky, vegetation, stone) rather than primary architectural discriminators (Shikhara curvature, Gopuram pyramid ratio, Deula height). This is a known limitation of transfer learning on small domain-specific datasets.
+
+- **Three styles only:** Covers Nagara, Dravidian, and Kalinga lineages. Regional substyles (Vesara, Hemadpanthi, Kerala) and Indo-Islamic hybrid architecture are outside the current scope.
+
+---
+
+## Future Improvements
+
+- Expand dataset to 500+ images/class using Wikimedia Commons CC-licensed temple photographs
+- Add negative sample training (non-temple images) to improve OOD rejection accuracy
+- Migrate `architectureData.js` to SQLite with dynamic Flask API endpoints
+- Add 3D hotspot annotations on museum models using `@react-three/drei` Html overlays
+- Implement Leaflet marker clustering and dynasty-based map filtering
+
+---
+
+## License
+
+MIT License © 2025 Prajna Shetty — see [LICENSE](LICENSE) for details.
+
+---
+
+## Acknowledgements
+
+- EfficientNet (Tan & Le, 2019) for the base architecture
+- LIME (Ribeiro et al., 2016) for model interpretability
+- React Three Fiber and Three.js community for WebGL tooling
+- Wikimedia Commons contributors for temple reference imagery
